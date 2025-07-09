@@ -218,33 +218,40 @@ export const ImageSwiper: React.FC<ImageSwiperProps> = ({
 
   return (
     <>
-      <section
-        className={`relative grid place-content-center select-none ${className}`}
-        ref={cardStackRef}
-        style={{
-          width: cardWidth + 32,
-          height: cardHeight + 32,
-          touchAction: 'none',
-          transformStyle: 'preserve-3d',
-          '--card-perspective': '700px',
-          '--card-z-offset': '12px',
-          '--card-y-offset': '7px',
-          '--card-max-z-index': images.length.toString(),
-          '--card-swap-duration': '0.3s',
-        } as React.CSSProperties}
-      >
+      <div className="flex justify-center items-center w-full">
+        <section
+          className={`relative select-none ${className}`}
+          ref={cardStackRef}
+          style={{
+            width: cardWidth + 32,
+            height: cardHeight + 32,
+            touchAction: 'none',
+            transformStyle: 'preserve-3d',
+            userSelect: 'none',
+            WebkitUserSelect: 'none',
+            WebkitTouchCallout: 'none',
+            '--card-perspective': '700px',
+            '--card-z-offset': '12px',
+            '--card-y-offset': '7px',
+            '--card-max-z-index': images.length.toString(),
+            '--card-swap-duration': '0.3s',
+          } as React.CSSProperties}
+        >
         {cardOrder.map((originalIndex, displayIndex) => (
           <article
             key={`${images[originalIndex]}-${originalIndex}`}
             className="image-card absolute cursor-grab active:cursor-grabbing
-                       place-self-center border border-slate-400 rounded-xl
+                       border border-slate-400 rounded-xl
                        shadow-md overflow-hidden will-change-transform"
             style={{
               '--i': (displayIndex + 1).toString(),
               zIndex: images.length - displayIndex,
               width: cardWidth,
               height: cardHeight,
-              transform: `perspective(var(--card-perspective))
+              left: '50%',
+              top: '50%',
+              transform: `translate(-50%, -50%) 
+                         perspective(var(--card-perspective))
                          translateZ(calc(-1 * var(--card-z-offset) * var(--i)))
                          translateY(calc(var(--card-y-offset) * var(--i)))
                          translateX(var(--swipe-x, 0px))
@@ -254,12 +261,19 @@ export const ImageSwiper: React.FC<ImageSwiperProps> = ({
             <img
               src={images[originalIndex]}
               alt={`Swiper image ${originalIndex + 1}`}
-              className="w-full h-full object-cover select-none pointer-events-none"
+              className="w-full h-full object-cover select-none"
               draggable={false}
+              style={{
+                userSelect: 'none',
+                WebkitUserSelect: 'none',
+                WebkitTouchCallout: 'none',
+                pointerEvents: 'auto'
+              }}
             />
           </article>
         ))}
-      </section>
+              </section>
+      </div>
 
       {/* Fullscreen Modal */}
       <AnimatePresence>
