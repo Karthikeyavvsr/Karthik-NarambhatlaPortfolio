@@ -18,8 +18,8 @@ interface ImageSwiperProps {
 export const ImageSwiper: React.FC<ImageSwiperProps> = ({
   images,
   imageObjects,
-  cardWidth = 300,   // Slightly increased
-  cardHeight = 400,  // Slightly increased
+  cardWidth = 300,
+  cardHeight = 400,
   className = ''
 }) => {
   let _imageObjects: ImageObject[] = [];
@@ -195,18 +195,10 @@ export const ImageSwiper: React.FC<ImageSwiperProps> = ({
     return () => window.removeEventListener('keydown', keyHandler);
   }, [fullscreenIdx]);
 
-  const [fadeIdx, setFadeIdx] = useState<number | null>(null);
-  useEffect(() => {
-    if (fadeIdx === null) return;
-    const timeout = setTimeout(() => setFadeIdx(null), 250);
-    return () => clearTimeout(timeout);
-  }, [fadeIdx]);
-
   const showCaptions = _imageObjects.some(img => img.caption);
 
   return (
     <>
-      {/* Card Stack */}
       <section
         className={`relative flex justify-center items-center select-none ${className}`}
         ref={cardStackRef}
@@ -239,7 +231,7 @@ export const ImageSwiper: React.FC<ImageSwiperProps> = ({
                           translateX(var(--swipe-x, 0px))
                           rotateY(var(--swipe-rotate, 0deg))`
             } as React.CSSProperties}
-            animate={fadeIdx === originalIndex ? { opacity: [1, 0.5, 1] } : { opacity: 1 }}
+            animate={{ opacity: 1 }}
             transition={{ duration: 0.25 }}
           >
             <img
@@ -249,8 +241,8 @@ export const ImageSwiper: React.FC<ImageSwiperProps> = ({
               draggable={false}
               loading="lazy"
               onClick={(e) => {
-                setFadeIdx(originalIndex);
-                setTimeout(() => openFullscreen(originalIndex, e), 120);
+                e.stopPropagation();
+                openFullscreen(originalIndex, e);
               }}
             />
             {showCaptions && _imageObjects[originalIndex].caption && (
@@ -269,7 +261,6 @@ export const ImageSwiper: React.FC<ImageSwiperProps> = ({
         </div>
       </section>
 
-      {/* Fullscreen Modal */}
       <AnimatePresence>
         {fullscreenIdx !== null && (
           <motion.div
