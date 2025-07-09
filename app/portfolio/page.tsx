@@ -32,34 +32,36 @@ export default function PortfolioPage() {
   const allImages = Object.values(categoryImages).flat();
 
   return (
-    <main className="min-h-screen bg-black text-white px-4 pt-20 flex flex-col items-center">
-      {/* Mobile-friendly Category Cards */}
-      <div className="w-full max-w-5xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 px-2 sm:px-4">
-        {categories.map((category) => (
-          <Link key={category.slug} href={`/portfolio/${category.slug}`} className="w-full">
-            <div className="relative rounded-xl overflow-hidden shadow-md aspect-[4/5] bg-[#222] hover:shadow-lg transition border border-white/10 hover:border-white/30">
-              <img
-                src={category.image}
-                alt={category.name}
-                className="absolute inset-0 w-full h-full object-cover z-0 pointer-events-none"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = '/poster.jpg';
-                }}
-              />
-              <div className="absolute inset-0 bg-black/30" />
-              <div className="relative z-10 p-4">
-                <h3 className="text-lg font-semibold">{category.name}</h3>
-                <p className="text-sm text-gray-300">{category.description}</p>
+    <main className="min-h-screen bg-black text-white px-2 sm:px-4 py-10 pt-16 flex flex-col items-center pb-24">
+      {/* Compact Categories Grid at the Top */}
+      <div className="w-full flex flex-col items-center">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-xs sm:max-w-3xl w-full mx-auto mb-6 justify-items-center">
+          {categories.map((category) => (
+            <Link key={category.slug} href={`/portfolio/${category.slug}`} className="w-full">
+              <div className="relative rounded-xl overflow-hidden shadow-md aspect-[4/5] bg-[#222] hover:shadow-lg transition border border-white/10 hover:border-white/30">
+                <img
+                  src={category.image}
+                  alt={category.name}
+                  className="absolute inset-0 w-full h-full object-cover z-0 pointer-events-none"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = '/poster.jpg';
+                  }}
+                />
+                <div className="absolute inset-0 bg-black/30" />
+                <div className="relative z-10 p-4">
+                  <h3 className="text-lg font-semibold">{category.name}</h3>
+                  <p className="text-sm text-gray-300">{category.description}</p>
+                </div>
               </div>
-            </div>
-          </Link>
-        ))}
+            </Link>
+          ))}
+        </div>
       </div>
 
       {/* Featured Section */}
-      <div className="w-full max-w-6xl mt-12">
-        <h2 className="text-2xl font-bold mb-6">Featured:</h2>
-        <div className="w-full h-[70vh] sm:h-[80vh]">
+      <div className="w-full flex justify-center items-center mt-10">
+        <div className="w-full max-w-full sm:max-w-7xl h-[60vh] sm:h-[90vh] flex flex-col items-center justify-center">
+          <h2 className="text-2xl font-bold mb-6 text-left w-full">Featured:</h2>
           <StickyScroll images={allImages} />
         </div>
       </div>
