@@ -92,13 +92,18 @@ export const ImageSwiper: React.FC<ImageSwiperProps> = ({
 
     const deltaX = currentX.current - startX.current;
     const threshold = 50;
+    const tapThreshold = 15; // Increased tap threshold
     const duration = getDurationFromCSS('--card-swap-duration', cardStackRef.current);
     const card = getActiveCard();
 
-    // Check if this was a tap (small movement)
-    if (Math.abs(deltaX) < 10 && tapCallback) {
+    // Check if this was a tap (small movement and callback provided)
+    if (Math.abs(deltaX) < tapThreshold && tapCallback) {
+      console.log('Tap detected, opening fullscreen'); // Debug log
       tapCallback();
       isSwiping.current = false;
+      startX.current = 0;
+      currentX.current = 0;
+      swipeDistance.current = 0;
       return;
     }
 
@@ -181,15 +186,24 @@ export const ImageSwiper: React.FC<ImageSwiperProps> = ({
       handleMove(e.clientX);
     };
     const handlePointerUp = (e: PointerEvent) => {
+      console.log('Pointer up event'); // Debug log
       // Find which card was clicked
       const target = e.target as HTMLElement;
       const cardElement = target.closest('.image-card') as HTMLElement;
+      console.log('Card element found:', !!cardElement); // Debug log
+      
       if (cardElement) {
         const cards = getCards();
         const cardIndex = cards.indexOf(cardElement);
+        console.log('Card index:', cardIndex); // Debug log
+        
         if (cardIndex === 0) { // Only allow tap on the top card
           const originalIndex = cardOrder[cardIndex];
-          handleEnd(() => openFullscreen(originalIndex, e as any));
+          console.log('Opening fullscreen for index:', originalIndex); // Debug log
+          handleEnd(() => {
+            console.log('Executing tap callback'); // Debug log
+            openFullscreen(originalIndex, e as any);
+          });
         } else {
           handleEnd();
         }
@@ -257,6 +271,13 @@ export const ImageSwiper: React.FC<ImageSwiperProps> = ({
                          translateX(var(--swipe-x, 0px))
                          rotateY(var(--swipe-rotate, 0deg))`
             } as React.CSSProperties}
+            onClick={(e) => {
+              // Backup click handler for when pointer events don't work
+              if (displayIndex === 0 && !isSwiping.current) {
+                console.log('Click handler triggered'); // Debug log
+                openFullscreen(originalIndex, e as any);
+              }
+            }}
           >
             <img
               src={images[originalIndex]}
