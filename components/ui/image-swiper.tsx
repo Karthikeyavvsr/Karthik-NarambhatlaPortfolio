@@ -12,8 +12,8 @@ interface ImageSwiperProps {
 
 export const ImageSwiper: React.FC<ImageSwiperProps> = ({
   images,
-  cardWidth = 256,
-  cardHeight = 352,
+  cardWidth = 320,  // Increased from 256px
+  cardHeight = 450, // Increased from 352px
   className = ''
 }) => {
   const cardStackRef = useRef<HTMLDivElement>(null);
@@ -208,6 +208,14 @@ export const ImageSwiper: React.FC<ImageSwiperProps> = ({
   return (
     <>
       <div className="flex flex-col items-center justify-center w-full">
+        {/* User Guide Caption - Moved to Top */}
+        <div className="mb-6 text-center">
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            <span className="inline-block mr-2">👆</span>
+            Tap image to view fullscreen • Swipe to navigate
+          </p>
+        </div>
+
         <section
           className={`relative select-none ${className}`}
           ref={cardStackRef}
@@ -259,14 +267,6 @@ export const ImageSwiper: React.FC<ImageSwiperProps> = ({
             </article>
           ))}
         </section>
-        
-        {/* User Guide Caption */}
-        <div className="mt-4 text-center">
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            <span className="inline-block mr-2">👆</span>
-            Tap image to view fullscreen • Swipe to navigate
-          </p>
-        </div>
       </div>
 
       {/* Fullscreen Modal */}
