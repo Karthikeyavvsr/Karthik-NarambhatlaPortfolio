@@ -98,15 +98,14 @@ const StickyScroll = forwardRef<HTMLElement, StickyScrollProps>(
         <div
           ref={ref}
           key={key}
-          className="overflow-y-hidden h-[80vh] flex flex-col gap-2 scroll-smooth"
-          style={{ scrollbarWidth: 'none' }}
+          className="flex flex-col gap-2 w-full"
         >
           {[...images, ...images].map((src, idx) => (
             <figure className="w-full" key={src + idx}>
               <img
                 src={src}
                 alt="Featured photo"
-                className="transition-all duration-300 w-full h-96 object-cover rounded-md cursor-pointer"
+                className="transition-all duration-300 w-full aspect-[4/5] object-cover rounded-md cursor-pointer"
                 loading="lazy"
                 onClick={() => setSelectedImage(src)}
               />
@@ -116,16 +115,33 @@ const StickyScroll = forwardRef<HTMLElement, StickyScrollProps>(
       );
     }
 
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+
     return (
       <main className="bg-black" ref={ref}>
         <section className="text-white w-full bg-slate-950 px-2 py-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-            {renderColumn(colImages[0], scrollRefs[0], 'left')}
-            {renderColumn(colImages[1], scrollRefs[1], 'center')}
-            {renderColumn(colImages[2], scrollRefs[2], 'right')}
-          </div>
+          {isMobile ? (
+            <div className="flex flex-row overflow-x-auto snap-x snap-mandatory gap-4 w-full pb-4">
+              {images.map((src, idx) => (
+                <figure className="flex-shrink-0 w-64 aspect-[4/5] snap-center rounded-md overflow-hidden shadow-md bg-black" key={src + idx}>
+                  <img
+                    src={src}
+                    alt="Featured photo"
+                    className="w-full h-full object-cover rounded-md cursor-pointer"
+                    loading="lazy"
+                    onClick={() => setSelectedImage(src)}
+                  />
+                </figure>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-3 gap-2 w-full">
+              {renderColumn(colImages[0], scrollRefs[0], 'left')}
+              {renderColumn(colImages[1], scrollRefs[1], 'center')}
+              {renderColumn(colImages[2], scrollRefs[2], 'right')}
+            </div>
+          )}
         </section>
-
         {/* Modal Viewer */}
         {selectedImage && (
           <div
