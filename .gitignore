@@ -4,4 +4,3 @@ node_modules/
 .vscode/
 *.log
 public/*.MP4
-public/*.mp4
