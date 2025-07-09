@@ -163,11 +163,9 @@ export const ImageSwiper: React.FC<ImageSwiperProps> = ({
 
   useEffect(() => updatePositions(), [cardOrder, updatePositions]);
 
-  // --- Fullscreen Modal Logic ---
   const openFullscreen = (idx: number, e: React.MouseEvent) => {
-    // Always use the image's bounding rect for animation, but allow any area to trigger
-    const img = (e.target as HTMLElement).querySelector('img') || e.target;
-    setOriginRect((img as HTMLImageElement).getBoundingClientRect());
+    const img = (e.target as HTMLImageElement);
+    setOriginRect(img.getBoundingClientRect());
     setFullscreenIdx(idx);
   };
 
@@ -206,58 +204,56 @@ export const ImageSwiper: React.FC<ImageSwiperProps> = ({
 
   const showCaptions = _imageObjects.some(img => img.caption);
 
-  // Mobile: horizontal scroll, snap-x; Desktop: stack
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-
   return (
     <>
-      {/* Swiper: horizontal scroll on mobile, stack on desktop */}
+      {/* Card Stack */}
       <section
-        className={
-          `relative w-full flex ${isMobile ? 'overflow-x-auto snap-x snap-mandatory space-x-4 py-4' : 'grid place-content-center'} select-none ${className}`
-        }
+        className={`relative flex justify-center items-center select-none ${className}`}
         ref={cardStackRef}
         style={{
-          width: isMobile ? '100%' : cardWidth + 32,
-          height: isMobile ? 'auto' : cardHeight + 32,
-          touchAction: 'pan-x',
-        }}
+          width: '100%',
+          maxWidth: `${cardWidth + 80}px`,
+          height: cardHeight + 32,
+          margin: '0 auto',
+          touchAction: 'none',
+          transformStyle: 'preserve-3d',
+          '--card-perspective': '700px',
+          '--card-z-offset': '12px',
+          '--card-y-offset': '7px',
+          '--card-max-z-index': _imageObjects.length.toString(),
+          '--card-swap-duration': '0.3s',
+        } as React.CSSProperties}
       >
         {cardOrder.map((originalIndex, displayIndex) => (
           <motion.article
             key={`${_imageObjects[originalIndex].src}-${originalIndex}`}
-            className={
-              isMobile
-                ? 'snap-center flex-shrink-0 w-72 h-96 rounded-xl overflow-hidden shadow-md border border-slate-400 bg-black cursor-pointer'
-                : 'image-card absolute cursor-grab active:cursor-grabbing place-self-center border border-slate-400 rounded-xl shadow-md overflow-hidden will-change-transform'
-            }
-            style={
-              isMobile
-                ? { zIndex: 10 - displayIndex }
-                : ({
-                    '--i': (displayIndex + 1).toString(),
-                    zIndex: _imageObjects.length - displayIndex,
-                    width: cardWidth,
-                    height: cardHeight,
-                    transform: `perspective(var(--card-perspective)) translateZ(calc(-1 * var(--card-z-offset) * var(--i))) translateY(calc(var(--card-y-offset) * var(--i))) translateX(var(--swipe-x, 0px)) rotateY(var(--swipe-rotate, 0deg))`
-                  } as any)
-            }
+            className="image-card absolute cursor-grab active:cursor-grabbing place-self-center border border-slate-400 rounded-xl shadow-md overflow-hidden"
+            style={{
+              '--i': (displayIndex + 1).toString(),
+              zIndex: _imageObjects.length - displayIndex,
+              width: cardWidth,
+              height: cardHeight,
+              transform: `perspective(var(--card-perspective))
+                          translateZ(calc(-1 * var(--card-z-offset) * var(--i)))
+                          translateY(calc(var(--card-y-offset) * var(--i)))
+                          translateX(var(--swipe-x, 0px))
+                          rotateY(var(--swipe-rotate, 0deg))`
+            } as React.CSSProperties}
             animate={fadeIdx === originalIndex ? { opacity: [1, 0.5, 1] } : { opacity: 1 }}
             transition={{ duration: 0.25 }}
-            onClick={e => {
-              setFadeIdx(originalIndex);
-              setTimeout(() => openFullscreen(originalIndex, e), 120);
-            }}
           >
             <img
               src={_imageObjects[originalIndex].src}
               alt={_imageObjects[originalIndex].caption || `Swiper image ${originalIndex + 1}`}
-              className="w-full h-full object-cover select-none pointer-events-auto cursor-pointer"
+              className="w-full h-full object-cover cursor-pointer"
               draggable={false}
               loading="lazy"
+              onClick={(e) => {
+                setFadeIdx(originalIndex);
+                setTimeout(() => openFullscreen(originalIndex, e), 120);
+              }}
             />
-            {/* Caption */}
-            {isMobile && _imageObjects[originalIndex].caption && (
+            {showCaptions && _imageObjects[originalIndex].caption && (
               <div className="absolute bottom-2 left-0 right-0 flex justify-center">
                 <span className="bg-black/70 text-white px-3 py-1 rounded text-xs font-medium shadow-lg">
                   {_imageObjects[originalIndex].caption}
@@ -266,16 +262,14 @@ export const ImageSwiper: React.FC<ImageSwiperProps> = ({
             )}
           </motion.article>
         ))}
-        {/* Instruction for fullscreen */}
-        {!isMobile && (
-          <div className="absolute bottom-2 left-0 right-0 flex justify-center pointer-events-none">
-            <span className="bg-black/60 text-white px-3 py-1 rounded text-xs font-medium shadow-lg opacity-80">
-              Click image to view fullscreen.
-            </span>
-          </div>
-        )}
+        <div className="absolute bottom-2 left-0 right-0 flex justify-center pointer-events-none">
+          <span className="bg-black/60 text-white px-3 py-1 rounded text-xs font-medium shadow-lg opacity-80">
+            Click image to view fullscreen.
+          </span>
+        </div>
       </section>
-      {/* Fullscreen Modal (unchanged) */}
+
+      {/* Fullscreen Modal */}
       <AnimatePresence>
         {fullscreenIdx !== null && (
           <motion.div

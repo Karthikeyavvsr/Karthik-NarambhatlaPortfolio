@@ -26,7 +26,7 @@ export default function RootLayout({
     <html lang="en">
       <body className="bg-black text-white">
         <Navbar />
-        <main className="pt-16 pb-24">
+        <main className="pt-16">
           {children}
         </main>
         <Footer />
