@@ -295,8 +295,8 @@ const StickyScroll = forwardRef<HTMLElement, StickyScrollProps>(
     }
 
     return (
-      <main className="bg-black" ref={ref}>
-        <section className="text-white w-full bg-slate-950 px-2 py-4 pb-20 sm:pb-16 md:pb-12 lg:pb-8 mb-8 sm:mb-6 md:mb-4 min-h-[calc(100vh-200px)]">
+      <main className="bg-black relative" ref={ref}>
+        <section className="text-white w-full bg-slate-950 px-2 py-4 pb-32 sm:pb-24 md:pb-16 lg:pb-12 mb-16 sm:mb-12 md:mb-8 min-h-[calc(100vh-300px)] sm:min-h-[calc(100vh-250px)] md:min-h-[calc(100vh-200px)]">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
             {renderColumn(colImages[0], scrollRefs[0], 'left', 0)}
             {renderColumn(colImages[1], scrollRefs[1], 'center', 1)}
