@@ -43,7 +43,7 @@ const StickyScroll = forwardRef<HTMLElement, StickyScrollProps>(
 
     // Infinite scroll animation
     useEffect(() => {
-      const speeds = [2.5, 2.0, 3.2]; // slight boost
+      const speeds = [2.5, 1.8, 3.2]; // slight boost
       let animationFrame: number;
       let running = true;
 

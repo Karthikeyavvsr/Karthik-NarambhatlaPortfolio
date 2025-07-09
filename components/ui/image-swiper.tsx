@@ -64,42 +64,84 @@ export const ImageSwiper: React.FC<ImageSwiperProps> = ({
     isDragging.current = false;
     startX.current = e.clientX;
     startTime.current = Date.now();
+    
+    // Add mouse move and up listeners to the document for better tracking
+    const handleDocumentMouseMove = (moveEvent: MouseEvent) => {
+      const deltaX = moveEvent.clientX - startX.current;
+      
+      if (Math.abs(deltaX) > 5) {
+        isDragging.current = true;
+        
+        // Apply visual feedback during drag
+        const activeCard = getActiveCard();
+        if (activeCard) {
+          activeCard.style.transition = 'none';
+          activeCard.style.setProperty('--swipe-x', `${deltaX}px`);
+          activeCard.style.setProperty('--swipe-rotate', `${deltaX * 0.1}deg`);
+          activeCard.style.opacity = `${Math.max(0.3, 1 - Math.abs(deltaX) / 200)}`;
+        }
+      }
+    };
+
+    const handleDocumentMouseUp = (upEvent: MouseEvent) => {
+      const deltaX = upEvent.clientX - startX.current;
+      const deltaTime = Date.now() - startTime.current;
+      
+      // Desktop swipe detection - more sensitive
+      if (Math.abs(deltaX) > 40) {
+        isDragging.current = true;
+        const direction = deltaX > 0 ? 1 : -1;
+        
+        // Animate the card out
+        const activeCard = getActiveCard();
+        if (activeCard) {
+          activeCard.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+          activeCard.style.setProperty('--swipe-x', `${direction * 300}px`);
+          activeCard.style.setProperty('--swipe-rotate', `${direction * 20}deg`);
+          activeCard.style.opacity = '0';
+          
+          setTimeout(() => {
+            setCardOrder(prev => [...prev.slice(1), prev[0]]);
+          }, 300);
+        }
+      } else {
+        // Reset card position if not swiped
+        const activeCard = getActiveCard();
+        if (activeCard) {
+          activeCard.style.transition = 'transform 0.2s ease, opacity 0.2s ease';
+          activeCard.style.setProperty('--swipe-x', '0px');
+          activeCard.style.setProperty('--swipe-rotate', '0deg');
+          activeCard.style.opacity = '1';
+        }
+      }
+      
+      // Clean up listeners
+      document.removeEventListener('mousemove', handleDocumentMouseMove);
+      document.removeEventListener('mouseup', handleDocumentMouseUp);
+      
+      // Reset dragging flag after a short delay
+      setTimeout(() => {
+        isDragging.current = false;
+      }, 100);
+    };
+
+    // Add listeners to document for better mouse tracking
+    document.addEventListener('mousemove', handleDocumentMouseMove);
+    document.addEventListener('mouseup', handleDocumentMouseUp);
+    
+    e.preventDefault();
   };
 
+  // Keep these empty since we're using document listeners for mouse events
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (Math.abs(e.clientX - startX.current) > 5) {
-      isDragging.current = true;
-    }
+    // This is handled by document listener now
   };
 
   const handleMouseUp = (e: React.MouseEvent) => {
-    const deltaX = e.clientX - startX.current;
-    const deltaTime = Date.now() - startTime.current;
-    
-    // If it was a quick movement over threshold, treat as swipe
-    if (Math.abs(deltaX) > 50 && deltaTime < 300) {
-      const direction = deltaX > 0 ? 1 : -1;
-      
-      // Animate the card out
-      const activeCard = getActiveCard();
-      if (activeCard) {
-        activeCard.style.setProperty('--swipe-x', `${direction * 300}px`);
-        activeCard.style.setProperty('--swipe-rotate', `${direction * 20}deg`);
-        activeCard.style.opacity = '0';
-        
-        setTimeout(() => {
-          setCardOrder(prev => [...prev.slice(1), prev[0]]);
-        }, 300);
-      }
-    }
-    
-    // Reset after a short delay
-    setTimeout(() => {
-      isDragging.current = false;
-    }, 50);
+    // This is handled by document listener now
   };
 
-  // Touch events for mobile
+  // Touch events for mobile - KEEPING EXACTLY AS THEY WERE WORKING
   const handleTouchStart = (e: React.TouchEvent) => {
     isDragging.current = false;
     startX.current = e.touches[0].clientX;
@@ -107,8 +149,19 @@ export const ImageSwiper: React.FC<ImageSwiperProps> = ({
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (Math.abs(e.touches[0].clientX - startX.current) > 5) {
+    const deltaX = e.touches[0].clientX - startX.current;
+    
+    if (Math.abs(deltaX) > 3) {
       isDragging.current = true;
+      
+      // Apply visual feedback during drag
+      const activeCard = getActiveCard();
+      if (activeCard && Math.abs(deltaX) > 10) {
+        activeCard.style.transition = 'none';
+        activeCard.style.setProperty('--swipe-x', `${deltaX}px`);
+        activeCard.style.setProperty('--swipe-rotate', `${deltaX * 0.1}deg`);
+        activeCard.style.opacity = `${Math.max(0.3, 1 - Math.abs(deltaX) / 200)}`;
+      }
     }
   };
 
@@ -116,11 +169,14 @@ export const ImageSwiper: React.FC<ImageSwiperProps> = ({
     const deltaX = e.changedTouches[0].clientX - startX.current;
     const deltaTime = Date.now() - startTime.current;
     
-    if (Math.abs(deltaX) > 50 && deltaTime < 300) {
+    // KEEPING the mobile swipe detection exactly as it was working
+    if (Math.abs(deltaX) > 25 || (Math.abs(deltaX) > 15 && deltaTime < 200)) {
+      isDragging.current = true;
       const direction = deltaX > 0 ? 1 : -1;
       
       const activeCard = getActiveCard();
       if (activeCard) {
+        activeCard.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
         activeCard.style.setProperty('--swipe-x', `${direction * 300}px`);
         activeCard.style.setProperty('--swipe-rotate', `${direction * 20}deg`);
         activeCard.style.opacity = '0';
@@ -129,11 +185,20 @@ export const ImageSwiper: React.FC<ImageSwiperProps> = ({
           setCardOrder(prev => [...prev.slice(1), prev[0]]);
         }, 300);
       }
+    } else {
+      // Reset card position if not swiped
+      const activeCard = getActiveCard();
+      if (activeCard) {
+        activeCard.style.transition = 'transform 0.2s ease, opacity 0.2s ease';
+        activeCard.style.setProperty('--swipe-x', '0px');
+        activeCard.style.setProperty('--swipe-rotate', '0deg');
+        activeCard.style.opacity = '1';
+      }
     }
     
     setTimeout(() => {
       isDragging.current = false;
-    }, 50);
+    }, 100);
   };
 
   useEffect(() => {
@@ -142,7 +207,7 @@ export const ImageSwiper: React.FC<ImageSwiperProps> = ({
 
   return (
     <>
-      <div className="flex justify-center items-center w-full">
+      <div className="flex flex-col items-center justify-center w-full">
         <section
           className={`relative select-none ${className}`}
           ref={cardStackRef}
@@ -169,7 +234,8 @@ export const ImageSwiper: React.FC<ImageSwiperProps> = ({
                            translateY(${displayIndex * 7}px)
                            translateX(var(--swipe-x, 0px))
                            rotateY(var(--swipe-rotate, 0deg))`,
-                transition: 'transform 0.3s ease, opacity 0.3s ease'
+                transition: 'transform 0.3s ease, opacity 0.3s ease',
+                touchAction: 'none' // Prevent scrolling on mobile
               } as React.CSSProperties}
               onClick={() => handleCardClick(originalIndex, displayIndex)}
               onMouseDown={handleMouseDown}
@@ -193,6 +259,14 @@ export const ImageSwiper: React.FC<ImageSwiperProps> = ({
             </article>
           ))}
         </section>
+        
+        {/* User Guide Caption */}
+        <div className="mt-4 text-center">
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            <span className="inline-block mr-2">👆</span>
+            Tap image to view fullscreen • Swipe to navigate
+          </p>
+        </div>
       </div>
 
       {/* Fullscreen Modal */}
