@@ -7,7 +7,6 @@ import React, {
 } from 'react';
 import Lenis from 'lenis';
 
-
 interface StickyScrollProps {
   images: string[];
 }
@@ -31,6 +30,8 @@ const StickyScroll = forwardRef<HTMLElement, StickyScrollProps>(
       useRef<HTMLDivElement>(null),
     ];
 
+    const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
     useEffect(() => {
       const shuffled = shuffleArray(images);
       const cols: string[][] = [[], [], []];
@@ -42,7 +43,7 @@ const StickyScroll = forwardRef<HTMLElement, StickyScrollProps>(
 
     // Infinite scroll animation
     useEffect(() => {
-      const speeds = [2.0, 1.5, 2.7];
+      const speeds = [2.5, 2.0, 3.2]; // slight boost
       let animationFrame: number;
       let running = true;
 
@@ -68,7 +69,7 @@ const StickyScroll = forwardRef<HTMLElement, StickyScrollProps>(
       };
     }, [colImages]);
 
-    // Lenis smooth scroll
+    // ✅ Smooth scrolling using Lenis
     useEffect(() => {
       const lenis = new Lenis({
         duration: 1.2,
@@ -105,8 +106,9 @@ const StickyScroll = forwardRef<HTMLElement, StickyScrollProps>(
               <img
                 src={src}
                 alt="Featured photo"
-                className="transition-all duration-300 w-full h-96 align-bottom object-cover rounded-md"
+                className="transition-all duration-300 w-full h-96 object-cover rounded-md cursor-pointer"
                 loading="lazy"
+                onClick={() => setSelectedImage(src)}
               />
             </figure>
           ))}
@@ -116,19 +118,33 @@ const StickyScroll = forwardRef<HTMLElement, StickyScrollProps>(
 
     return (
       <main className="bg-black" ref={ref}>
-        <section className="text-white w-full bg-slate-950">
-          <div className="grid grid-cols-12 gap-2">
-            <div className="col-span-4">
-              {renderColumn(colImages[0], scrollRefs[0], 'left')}
-            </div>
-            <div className="col-span-4">
-              {renderColumn(colImages[1], scrollRefs[1], 'center')}
-            </div>
-            <div className="col-span-4">
-              {renderColumn(colImages[2], scrollRefs[2], 'right')}
-            </div>
+        <section className="text-white w-full bg-slate-950 px-2 py-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+            {renderColumn(colImages[0], scrollRefs[0], 'left')}
+            {renderColumn(colImages[1], scrollRefs[1], 'center')}
+            {renderColumn(colImages[2], scrollRefs[2], 'right')}
           </div>
         </section>
+
+        {/* Modal Viewer */}
+        {selectedImage && (
+          <div
+            className="fixed inset-0 z-[9999] bg-black bg-opacity-90 flex justify-center items-center"
+            onClick={() => setSelectedImage(null)}
+          >
+            <img
+              src={selectedImage}
+              alt="Full view"
+              className="max-w-[90vw] max-h-[90vh] rounded-lg shadow-lg"
+            />
+            <button
+              onClick={() => setSelectedImage(null)}
+              className="absolute top-4 right-4 text-white text-3xl font-bold"
+            >
+              ×
+            </button>
+          </div>
+        )}
       </main>
     );
   }
