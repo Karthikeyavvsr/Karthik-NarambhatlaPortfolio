@@ -32,10 +32,10 @@ export default function PortfolioPage() {
   const allImages = Object.values(categoryImages).flat();
 
   return (
-    <main className="min-h-screen bg-black text-white px-2 sm:px-4 py-10 pt-16 flex flex-col items-center pb-28">
+    <main className="min-h-screen bg-black text-white px-2 sm:px-4 py-10 pt-16 flex flex-col items-center pb-24">
       {/* Compact Categories Grid at the Top */}
       <div className="w-full flex flex-col items-center">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-xs sm:max-w-3xl w-full mx-auto mb-6 justify-items-center">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-xs sm:max-w-3xl w-full mx-auto mb-6 justify-items-center">
           {categories.map((category) => (
             <Link key={category.slug} href={`/portfolio/${category.slug}`} className="w-full">
               <div className="relative rounded-xl overflow-hidden shadow-md aspect-[4/5] bg-[#222] hover:shadow-lg transition border border-white/10 hover:border-white/30">
