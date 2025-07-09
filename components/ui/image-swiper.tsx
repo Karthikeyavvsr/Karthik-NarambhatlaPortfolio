@@ -12,16 +12,14 @@ interface ImageSwiperProps {
 
 export const ImageSwiper: React.FC<ImageSwiperProps> = ({
   images,
-  cardWidth = 256,  // 16rem = 256px
-  cardHeight = 352, // 22rem = 352px
+  cardWidth = 256,
+  cardHeight = 352,
   className = ''
 }) => {
   const cardStackRef = useRef<HTMLDivElement>(null);
-  const isSwiping = useRef(false);
+  const isDragging = useRef(false);
   const startX = useRef(0);
-  const currentX = useRef(0);
-  const animationFrameId = useRef<number | null>(null);
-  const swipeDistance = useRef(0);
+  const startTime = useRef(0);
 
   const [cardOrder, setCardOrder] = useState<number[]>(() =>
     Array.from({ length: images.length }, (_, i) => i)
@@ -29,21 +27,6 @@ export const ImageSwiper: React.FC<ImageSwiperProps> = ({
 
   // Fullscreen functionality
   const [fullscreenIdx, setFullscreenIdx] = useState<number | null>(null);
-  const [originRect, setOriginRect] = useState<DOMRect | null>(null);
-
-  const getDurationFromCSS = useCallback((
-    variableName: string,
-    element?: HTMLElement | null
-  ): number => {
-    const targetElement = element || document.documentElement;
-    const value = getComputedStyle(targetElement)
-      ?.getPropertyValue(variableName)
-      ?.trim();
-    if (!value) return 300; // Default fallback
-    if (value.endsWith("ms")) return parseFloat(value);
-    if (value.endsWith("s")) return parseFloat(value) * 1000;
-    return parseFloat(value) || 300;
-  }, []);
 
   const getCards = useCallback((): HTMLElement[] => {
     if (!cardStackRef.current) return [];
@@ -55,180 +38,107 @@ export const ImageSwiper: React.FC<ImageSwiperProps> = ({
     return cards[0] || null;
   }, [getCards]);
 
-  const updatePositions = useCallback(() => {
+  const resetCardStyles = useCallback(() => {
     const cards = getCards();
     cards.forEach((card, i) => {
-      card.style.setProperty('--i', (i + 1).toString());
       card.style.setProperty('--swipe-x', '0px');
       card.style.setProperty('--swipe-rotate', '0deg');
       card.style.opacity = '1';
+      card.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
     });
   }, [getCards]);
 
-  const applySwipeStyles = useCallback((deltaX: number) => {
-    const card = getActiveCard();
-    if (!card) return;
-    card.style.setProperty('--swipe-x', `${deltaX}px`);
-    card.style.setProperty('--swipe-rotate', `${deltaX * 0.2}deg`);
-    card.style.opacity = (1 - Math.min(Math.abs(deltaX) / 100, 1) * 0.75).toString();
-  }, [getActiveCard]);
-
-  const handleStart = useCallback((clientX: number) => {
-    if (isSwiping.current) return;
-    isSwiping.current = true;
-    startX.current = clientX;
-    currentX.current = clientX;
-    swipeDistance.current = 0;
-    const card = getActiveCard();
-    if (card) card.style.transition = 'none';
-  }, [getActiveCard]);
-
-  const handleEnd = useCallback((tapCallback?: () => void) => {
-    if (!isSwiping.current) return;
-    if (animationFrameId.current) {
-      cancelAnimationFrame(animationFrameId.current);
-      animationFrameId.current = null;
+  const handleCardClick = (originalIndex: number, displayIndex: number) => {
+    // Only allow click on the top card and if not dragging
+    if (displayIndex === 0 && !isDragging.current) {
+      console.log('Card clicked, opening fullscreen for index:', originalIndex);
+      setFullscreenIdx(originalIndex);
     }
-
-    const deltaX = currentX.current - startX.current;
-    const threshold = 50;
-    const tapThreshold = 15; // Increased tap threshold
-    const duration = getDurationFromCSS('--card-swap-duration', cardStackRef.current);
-    const card = getActiveCard();
-
-    // Check if this was a tap (small movement and callback provided)
-    if (Math.abs(deltaX) < tapThreshold && tapCallback) {
-      console.log('Tap detected, opening fullscreen'); // Debug log
-      tapCallback();
-      isSwiping.current = false;
-      startX.current = 0;
-      currentX.current = 0;
-      swipeDistance.current = 0;
-      return;
-    }
-
-    if (card) {
-      card.style.transition = `transform ${duration}ms ease, opacity ${duration}ms ease`;
-
-      if (Math.abs(deltaX) > threshold) {
-        const direction = Math.sign(deltaX);
-        card.style.setProperty('--swipe-x', `${direction * 300}px`);
-        card.style.setProperty('--swipe-rotate', `${direction * 20}deg`);
-
-        setTimeout(() => {
-          if (getActiveCard() === card) {
-            card.style.setProperty('--swipe-rotate', `${-direction * 20}deg`);
-          }
-        }, duration * 0.5);
-
-        setTimeout(() => {
-          setCardOrder(prev => {
-            if (prev.length === 0) return [];
-            return [...prev.slice(1), prev[0]];
-          });
-        }, duration);
-      } else {
-        applySwipeStyles(0);
-      }
-    }
-
-    isSwiping.current = false;
-    startX.current = 0;
-    currentX.current = 0;
-    swipeDistance.current = 0;
-  }, [getDurationFromCSS, getActiveCard, applySwipeStyles]);
-
-  const handleMove = useCallback((clientX: number) => {
-    if (!isSwiping.current) return;
-    if (animationFrameId.current) {
-      cancelAnimationFrame(animationFrameId.current);
-    }
-    animationFrameId.current = requestAnimationFrame(() => {
-      currentX.current = clientX;
-      const deltaX = currentX.current - startX.current;
-      swipeDistance.current = Math.abs(deltaX);
-      applySwipeStyles(deltaX);
-
-      if (Math.abs(deltaX) > 50) {
-        handleEnd();
-      }
-    });
-  }, [applySwipeStyles, handleEnd]);
-
-  // Fullscreen functions
-  const openFullscreen = useCallback((idx: number, e: React.MouseEvent) => {
-    const img = e.target as HTMLImageElement;
-    setOriginRect(img.getBoundingClientRect());
-    setFullscreenIdx(idx);
-  }, []);
+  };
 
   const closeFullscreen = useCallback(() => {
     setFullscreenIdx(null);
-    setOriginRect(null);
   }, []);
 
-  const handleModalSwipe = useCallback((direction: number) => {
-    setFullscreenIdx(prev => {
-      if (prev === null) return null;
-      const next = (prev + direction + images.length) % images.length;
-      return next;
-    });
-  }, [images.length]);
+  const handleMouseDown = (e: React.MouseEvent) => {
+    isDragging.current = false;
+    startX.current = e.clientX;
+    startTime.current = Date.now();
+  };
 
-  useEffect(() => {
-    const cardStackElement = cardStackRef.current;
-    if (!cardStackElement) return;
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (Math.abs(e.clientX - startX.current) > 5) {
+      isDragging.current = true;
+    }
+  };
 
-    const handlePointerDown = (e: PointerEvent) => {
-      handleStart(e.clientX);
-    };
-    const handlePointerMove = (e: PointerEvent) => {
-      handleMove(e.clientX);
-    };
-    const handlePointerUp = (e: PointerEvent) => {
-      console.log('Pointer up event'); // Debug log
-      // Find which card was clicked
-      const target = e.target as HTMLElement;
-      const cardElement = target.closest('.image-card') as HTMLElement;
-      console.log('Card element found:', !!cardElement); // Debug log
+  const handleMouseUp = (e: React.MouseEvent) => {
+    const deltaX = e.clientX - startX.current;
+    const deltaTime = Date.now() - startTime.current;
+    
+    // If it was a quick movement over threshold, treat as swipe
+    if (Math.abs(deltaX) > 50 && deltaTime < 300) {
+      const direction = deltaX > 0 ? 1 : -1;
       
-      if (cardElement) {
-        const cards = getCards();
-        const cardIndex = cards.indexOf(cardElement);
-        console.log('Card index:', cardIndex); // Debug log
+      // Animate the card out
+      const activeCard = getActiveCard();
+      if (activeCard) {
+        activeCard.style.setProperty('--swipe-x', `${direction * 300}px`);
+        activeCard.style.setProperty('--swipe-rotate', `${direction * 20}deg`);
+        activeCard.style.opacity = '0';
         
-        if (cardIndex === 0) { // Only allow tap on the top card
-          const originalIndex = cardOrder[cardIndex];
-          console.log('Opening fullscreen for index:', originalIndex); // Debug log
-          handleEnd(() => {
-            console.log('Executing tap callback'); // Debug log
-            openFullscreen(originalIndex, e as any);
-          });
-        } else {
-          handleEnd();
-        }
-      } else {
-        handleEnd();
+        setTimeout(() => {
+          setCardOrder(prev => [...prev.slice(1), prev[0]]);
+        }, 300);
       }
-    };
+    }
+    
+    // Reset after a short delay
+    setTimeout(() => {
+      isDragging.current = false;
+    }, 50);
+  };
 
-    cardStackElement.addEventListener('pointerdown', handlePointerDown);
-    cardStackElement.addEventListener('pointermove', handlePointerMove);
-    cardStackElement.addEventListener('pointerup', handlePointerUp);
+  // Touch events for mobile
+  const handleTouchStart = (e: React.TouchEvent) => {
+    isDragging.current = false;
+    startX.current = e.touches[0].clientX;
+    startTime.current = Date.now();
+  };
 
-    return () => {
-      cardStackElement.removeEventListener('pointerdown', handlePointerDown);
-      cardStackElement.removeEventListener('pointermove', handlePointerMove);
-      cardStackElement.removeEventListener('pointerup', handlePointerUp);
-      if (animationFrameId.current) {
-        cancelAnimationFrame(animationFrameId.current);
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (Math.abs(e.touches[0].clientX - startX.current) > 5) {
+      isDragging.current = true;
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    const deltaX = e.changedTouches[0].clientX - startX.current;
+    const deltaTime = Date.now() - startTime.current;
+    
+    if (Math.abs(deltaX) > 50 && deltaTime < 300) {
+      const direction = deltaX > 0 ? 1 : -1;
+      
+      const activeCard = getActiveCard();
+      if (activeCard) {
+        activeCard.style.setProperty('--swipe-x', `${direction * 300}px`);
+        activeCard.style.setProperty('--swipe-rotate', `${direction * 20}deg`);
+        activeCard.style.opacity = '0';
+        
+        setTimeout(() => {
+          setCardOrder(prev => [...prev.slice(1), prev[0]]);
+        }, 300);
       }
-    };
-  }, [handleStart, handleMove, handleEnd, cardOrder, getCards, openFullscreen]);
+    }
+    
+    setTimeout(() => {
+      isDragging.current = false;
+    }, 50);
+  };
 
   useEffect(() => {
-    updatePositions();
-  }, [cardOrder, updatePositions]);
+    resetCardStyles();
+  }, [cardOrder, resetCardStyles]);
 
   return (
     <>
@@ -239,61 +149,50 @@ export const ImageSwiper: React.FC<ImageSwiperProps> = ({
           style={{
             width: cardWidth + 32,
             height: cardHeight + 32,
-            touchAction: 'none',
             transformStyle: 'preserve-3d',
-            userSelect: 'none',
-            WebkitUserSelect: 'none',
-            WebkitTouchCallout: 'none',
-            '--card-perspective': '700px',
-            '--card-z-offset': '12px',
-            '--card-y-offset': '7px',
-            '--card-max-z-index': images.length.toString(),
-            '--card-swap-duration': '0.3s',
           } as React.CSSProperties}
         >
-        {cardOrder.map((originalIndex, displayIndex) => (
-          <article
-            key={`${images[originalIndex]}-${originalIndex}`}
-            className="image-card absolute cursor-grab active:cursor-grabbing
-                       border border-slate-400 rounded-xl
-                       shadow-md overflow-hidden will-change-transform"
-            style={{
-              '--i': (displayIndex + 1).toString(),
-              zIndex: images.length - displayIndex,
-              width: cardWidth,
-              height: cardHeight,
-              left: '50%',
-              top: '50%',
-              transform: `translate(-50%, -50%) 
-                         perspective(var(--card-perspective))
-                         translateZ(calc(-1 * var(--card-z-offset) * var(--i)))
-                         translateY(calc(var(--card-y-offset) * var(--i)))
-                         translateX(var(--swipe-x, 0px))
-                         rotateY(var(--swipe-rotate, 0deg))`
-            } as React.CSSProperties}
-            onClick={(e) => {
-              // Backup click handler for when pointer events don't work
-              if (displayIndex === 0 && !isSwiping.current) {
-                console.log('Click handler triggered'); // Debug log
-                openFullscreen(originalIndex, e as any);
-              }
-            }}
-          >
-            <img
-              src={images[originalIndex]}
-              alt={`Swiper image ${originalIndex + 1}`}
-              className="w-full h-full object-cover select-none"
-              draggable={false}
+          {cardOrder.map((originalIndex, displayIndex) => (
+            <article
+              key={`${images[originalIndex]}-${originalIndex}`}
+              className="image-card absolute border border-slate-400 rounded-xl
+                         shadow-md overflow-hidden cursor-pointer"
               style={{
-                userSelect: 'none',
-                WebkitUserSelect: 'none',
-                WebkitTouchCallout: 'none',
-                pointerEvents: 'auto'
-              }}
-            />
-          </article>
-        ))}
-              </section>
+                zIndex: images.length - displayIndex,
+                width: cardWidth,
+                height: cardHeight,
+                left: '50%',
+                top: '50%',
+                transform: `translate(-50%, -50%) 
+                           perspective(700px)
+                           translateZ(${-displayIndex * 12}px)
+                           translateY(${displayIndex * 7}px)
+                           translateX(var(--swipe-x, 0px))
+                           rotateY(var(--swipe-rotate, 0deg))`,
+                transition: 'transform 0.3s ease, opacity 0.3s ease'
+              } as React.CSSProperties}
+              onClick={() => handleCardClick(originalIndex, displayIndex)}
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+            >
+              <img
+                src={images[originalIndex]}
+                alt={`Swiper image ${originalIndex + 1}`}
+                className="w-full h-full object-cover select-none"
+                draggable={false}
+                style={{
+                  userSelect: 'none',
+                  WebkitUserSelect: 'none',
+                  pointerEvents: 'none' // Prevent image from interfering with card events
+                }}
+              />
+            </article>
+          ))}
+        </section>
       </div>
 
       {/* Fullscreen Modal */}
