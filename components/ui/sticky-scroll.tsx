@@ -5,7 +5,8 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import Lenis from '@studio-freight/lenis';
+import Lenis from 'lenis';
+
 
 interface StickyScrollProps {
   images: string[];
@@ -72,7 +73,7 @@ const StickyScroll = forwardRef<HTMLElement, StickyScrollProps>(
       const lenis = new Lenis({
         duration: 1.2,
         easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-        smooth: true,
+        
       });
 
       function raf(time: number) {
