@@ -164,6 +164,15 @@ const StickyScroll = forwardRef<HTMLElement, StickyScrollProps>(
           animationFrame = requestAnimationFrame(animate);
         }
       }
+
+      // Initialize scroll positions for upward scrolling columns
+      scrollRefs.forEach((ref, idx) => {
+        if (directions[idx] === -1 && ref.current) {
+          // Set initial scroll position to middle for upward scrolling
+          ref.current.scrollTop = ref.current.scrollHeight / 2;
+        }
+      });
+
       animate();
 
       return () => {
@@ -257,7 +266,8 @@ const StickyScroll = forwardRef<HTMLElement, StickyScrollProps>(
       key: string,
       columnIndex: number
     ) {
-      const isReversed = columnIndex === 1; // Middle column scrolls up
+      // Only apply column-reverse on desktop for middle column
+      const isReversed = columnIndex === 1;
       
       return (
         <div
@@ -266,7 +276,7 @@ const StickyScroll = forwardRef<HTMLElement, StickyScrollProps>(
           className="overflow-y-hidden h-[80vh] flex flex-col gap-2 scroll-smooth"
           style={{ 
             scrollbarWidth: 'none',
-            flexDirection: isReversed ? 'column-reverse' : 'column'
+            // Remove flexDirection manipulation, handle in scroll logic instead
           }}
         >
           {[...images, ...images].map((src, idx) => (
