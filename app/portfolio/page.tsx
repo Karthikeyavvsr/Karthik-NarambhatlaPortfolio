@@ -25,11 +25,28 @@ const categories = [
     description: 'Plated art and crafted drinks',
     image: '/photos/food_drinks/DD209508.jpeg',
   },
+  {
+    name: 'Jewelry',
+    slug: 'jewelry',
+    description: 'Shine, sparkle, and elegance',
+    image: '/photos/Jewellery/DSC09570.JPG',
+  },
 ];
 
 export default function PortfolioPage() {
   const [modalImg, setModalImg] = useState<string | null>(null);
   const allImages = Object.values(categoryImages).flat();
+  // Integrate jewelry images into the featured section
+  const jewelryImages = categoryImages['jewelry'] || [];
+  // Mix/shuffle all images including jewelry for variety
+  const featuredImages = [...allImages, ...jewelryImages];
+  function shuffleArray(arr: string[]) {
+    return arr
+      .map((value) => ({ value, sort: Math.random() }))
+      .sort((a, b) => a.sort - b.sort)
+      .map(({ value }) => value);
+  }
+  const mixedImages = shuffleArray(featuredImages);
 
   return (
     <main className="min-h-screen bg-black text-white px-4 pt-20 flex flex-col items-center">
@@ -60,7 +77,7 @@ export default function PortfolioPage() {
       <div className="w-full max-w-6xl mt-12">
         <h2 className="text-2xl font-bold mb-6">Featured:</h2>
         <div className="w-full h-[70vh] sm:h-[80vh]">
-          <StickyScroll images={allImages} />
+          <StickyScroll images={mixedImages} />
         </div>
       </div>
 

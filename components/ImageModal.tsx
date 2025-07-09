@@ -8,6 +8,12 @@ interface ImageModalProps {
   alt?: string;
   onClose: () => void;
   originRect?: DOMRect | null;
+  navigation?: {
+    hasPrev: boolean;
+    hasNext: boolean;
+    goPrev: () => void;
+    goNext: () => void;
+  };
 }
 
 const spring = {
@@ -16,7 +22,7 @@ const spring = {
   damping: 40,
 };
 
-export default function ImageModal({ imageSrc, alt, onClose, originRect }: ImageModalProps) {
+export default function ImageModal({ imageSrc, alt, onClose, originRect, navigation }: ImageModalProps) {
   const [modalRect, setModalRect] = useState<{ width: number; height: number; x: number; y: number } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -68,6 +74,17 @@ export default function ImageModal({ imageSrc, alt, onClose, originRect }: Image
       }
     : { opacity: 1 };
 
+  // Keyboard navigation for arrows
+  useEffect(() => {
+    if (!navigation) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') navigation.goPrev();
+      if (e.key === 'ArrowRight') navigation.goNext();
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [navigation]);
+
   return (
     <AnimatePresence>
       <motion.div
@@ -77,6 +94,27 @@ export default function ImageModal({ imageSrc, alt, onClose, originRect }: Image
         exit={{ opacity: 0 }}
         onClick={onClose}
       >
+        {/* Navigation arrows */}
+        {navigation && navigation.hasPrev && (
+          <button
+            className="absolute left-4 top-1/2 -translate-y-1/2 z-50 bg-black/60 hover:bg-black/80 text-white rounded-full p-3 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            onClick={e => { e.stopPropagation(); navigation.goPrev(); }}
+            aria-label="Previous image"
+            tabIndex={0}
+          >
+            &#8592;
+          </button>
+        )}
+        {navigation && navigation.hasNext && (
+          <button
+            className="absolute right-4 top-1/2 -translate-y-1/2 z-50 bg-black/60 hover:bg-black/80 text-white rounded-full p-3 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            onClick={e => { e.stopPropagation(); navigation.goNext(); }}
+            aria-label="Next image"
+            tabIndex={0}
+          >
+            &#8594;
+          </button>
+        )}
         {/* The animated image */}
         <motion.img
           src={imageSrc}

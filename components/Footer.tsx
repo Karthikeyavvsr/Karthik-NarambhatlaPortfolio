@@ -9,7 +9,7 @@ export default function Footer() {
         <div className="flex flex-col md:flex-row justify-between items-center">
           {/* Photographer Name and Copyright */}
           <div className="text-center md:text-left mb-4 md:mb-0">
-            <h3 className="text-lg font-semibold mb-2">Karthik Narambhatla</h3>
+            <h3 className="text-lg font-semibold mb-2">Karthik Narambatla</h3>
             <p className="text-gray-400 text-sm">
               © {currentYear} All rights reserved.
             </p>

@@ -7,7 +7,7 @@ import { Home, User, Briefcase, FileText } from 'lucide-react';
 import { NavBarWrapper } from '../components/NavBarWrapper';
 
 export const metadata: Metadata = {
-  title: 'Karthik Narambhatla - Portfolio',
+  title: 'Karthik Narambatla - Portfolio',
   description: 'Professional photography portfolio showcasing weddings, fashion, and street photography.',
 };
 

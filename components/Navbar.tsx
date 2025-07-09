@@ -43,7 +43,7 @@ export default function Navbar() {
         <div className="flex justify-center items-center h-16 w-full">
           {/* Logo */}
           <Link href="/" className="text-xl font-bold text-white hover:text-gray-300 transition mr-8">
-            Karthik Narambhatla
+            Karthik Narambatla
           </Link>
           {/* Tubelight Nav - Desktop */}
           <div className="hidden md:flex items-center gap-3 bg-background/5 border-0 backdrop-blur-lg rounded-full shadow-lg h-16 px-4">

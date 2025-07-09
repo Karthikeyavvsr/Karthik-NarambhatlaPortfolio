@@ -32,7 +32,7 @@ export default function HeroSection() {
           variants={overlayVariants}
         >
           <h1 className="text-4xl md:text-6xl font-bold text-white drop-shadow-lg mb-4">
-            Karthik Narambhatla
+            Karthik Narambatla
           </h1>
           <p className="text-lg md:text-2xl text-gray-200 mb-8 max-w-2xl">
             Crafting Stories Through the Lens
